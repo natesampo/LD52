@@ -71,6 +71,8 @@ class Renderable {
 
 		// if recently damaged, flash white for a short duration
 		if (recentlyDamagedPercent) {
+			let playerFaction = ((this.faction == 'player') || (this instanceof ChildObject && this.parent.base.faction == 'player'));
+
 			let newCanvas = document.createElement('canvas');
 			newCanvas.width = sprite.width;
 			newCanvas.height = sprite.height;

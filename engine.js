@@ -418,7 +418,10 @@ class Level {
 		//this.tileSize = Math.round((this.targetTileSize * (newHeight / this.targetY)) / 32) * 32;
 
 		for (var sprite in oldSprites) {
-			document.getElementById(sprite).remove();
+			if (document.getElementById(sprite)) {
+				document.getElementById(sprite).remove();
+			}
+
 			let promise = loadSprite(sprite, this.tileSize);
 			if (promise) {
 				let level = this;
@@ -1003,6 +1006,7 @@ function gameLoop(game) {
 			game.tickID++;
 		}
 	}
+	render(game);
 
 	window.requestAnimationFrame(function() {gameLoop(game);});
 }

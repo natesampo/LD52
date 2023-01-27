@@ -3,6 +3,8 @@ class FactoryLevel extends Level {
 		super(color, tileSize, objects);
 
 		this.flashTime = 120;
+		this.byeTime = 240;
+		this.scrollSpeed = 0.1;
 
 		this.previewObject = null;
 		this.hoveredParticle = null;
@@ -12,19 +14,21 @@ class FactoryLevel extends Level {
 		this.dragging = false;
 		this.flashTimer = 0;
 		this.flash = false;
-		this.state = 'factory';
+		this.state = 'preGame';
+		this.byeOpacity = 0;
 	}
 
 	getTickOrder() {
-		//console.log(this.previewObject);
 		let tickOrder = [];
-		for (var i in this.map) {
-			for (var j in this.map[i]) {
-				for (var k=this.map[i][j].length-1; k>=0; k--) {
-					if ((this.map[i][j][k] instanceof GameObject || this.map[i][j][k] instanceof Particle) &&
-						((!(this.map[i][j][k] instanceof ChildObject) || this.map[i][j][k].parent != this.previewObject) && this.map[i][j][k] != this.previewObject)) {
+		if (this.state != 'preGame' && this.state != 'lobby') {
+			for (var i in this.map) {
+				for (var j in this.map[i]) {
+					for (var k=this.map[i][j].length-1; k>=0; k--) {
+						if ((this.map[i][j][k] instanceof GameObject || this.map[i][j][k] instanceof Particle) &&
+							((!(this.map[i][j][k] instanceof ChildObject) || this.map[i][j][k].parent != this.previewObject) && this.map[i][j][k] != this.previewObject)) {
 
-						tickOrder.push(this.map[i][j][k]);
+							tickOrder.push(this.map[i][j][k]);
+						}
 					}
 				}
 			}
@@ -39,6 +43,10 @@ class FactoryLevel extends Level {
 		if (this.flashTimer >= this.flashTime) {
 			this.flash = !this.flash;
 			this.flashTimer = 0;
+		}
+
+		if (this.byeOpacity > 0) {
+			this.byeOpacity -= 1/this.byeTime;
 		}
 
 		super.tick();
@@ -621,6 +629,10 @@ class FactoryLevel extends Level {
 
 			this.removeFromMap(obj);
 		} else {
+			if (id && players[id] && players[id].produced['money']) {
+				players[id].produced['money'] -= obj.cost;
+			}
+
 			if (obj instanceof CompositeObject) {
 				for (var child in obj.children) {
 					obj.children[child].opacity = 1;

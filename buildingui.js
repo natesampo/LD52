@@ -249,7 +249,7 @@ class LeftContainer extends UIElement {
 					let left = this.margin + (2 * this.curveSize + tileSize + this.margin) * j;
 					let top = tileSize / 8 + 24 + this.margin/2 + (2 * this.curveSize + tileSize + this.margin) * i;
 
-					if (x > left && x < left + 2 * this.curveSize + tileSize && y > top && y < top + 2 * this.curveSize + tileSize) {
+					if (id && players[id] && players[id].produced['money'] >= this.harvesterObjects[i * 2 + j].cost && x > left && x < left + 2 * this.curveSize + tileSize && y > top && y < top + 2 * this.curveSize + tileSize) {
 						let renderObjects = this.harvesterObjects[i * 2 + j];					
 						level.addPreviewObject((renderObjects[0] instanceof ChildObject) ? renderObjects[0].parent.createNew() : renderObjects[0].createNew());
 
@@ -601,7 +601,7 @@ class RightContainer extends UIElement {
 						let left = this.x + this.margin + (2 * this.curveSize + tileSize + this.margin) * j;
 						let top = tileSize / 8 + 24 + this.margin/2 + (2 * this.curveSize + tileSize + this.margin) * i;
 
-						if (x > left && x < left + 2 * this.curveSize + tileSize && y > top && y < top + 2 * this.curveSize + tileSize) {
+						if (id && players[id] && players[id].produced['money'] >= this.chosenObjects[i * 2 + j].cost && x > left && x < left + 2 * this.curveSize + tileSize && y > top && y < top + 2 * this.curveSize + tileSize) {
 							let renderObjects = this.chosenObjects[i * 2 + j];
 							level.addPreviewObject((renderObjects[0] instanceof ChildObject) ? renderObjects[0].parent.createNew() : renderObjects[0].createNew());
 

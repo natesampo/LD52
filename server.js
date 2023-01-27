@@ -24,27 +24,138 @@ server.listen(process.env.PORT || port, function() {
 });
 
 let games = {};
+let players = {};
 
 class ServerGame {
 	constructor(id) {
 		this.id = id;
 		this.players = {};
+		this.started = false;
 	}
 
 	addPlayer(player) {
-		this.players[player.id] = player;
-		player.inGame = this.id;
+		if (player.inGame != this.id) {
+			this.players[player.id] = player;
+			player.inGame = this.id;
 
-		/*for (var playerID in this.players) {
-			io.to(playerID).emit('p', player.id);
-			if (playerID != player.id) {
-				io.to(player.id).emit('p', playerID);
+			for (var playerID in this.players) {
+				io.to(playerID).emit('j', player.id + '|' + player.name);
+
+				if (playerID != player.id) {
+					io.to(player.id).emit('j', playerID + '|' + this.players[playerID].name);
+				}
 			}
-		}*/
+		}
 	}
 
-	removePlayer(playerID) {
-		delete this.players[playerID];
+	removePlayer(player) {
+		if (player.inGame == this.id) {
+			for (var playerID in this.players) {
+				io.to(playerID).emit('d', player.id);
+			}
+
+			delete this.players[player.id];
+
+			if (Object.keys(this.players).length > 0) {
+				if (player.id == this.id) {
+					this.id = Object.keys(this.players)[0];
+					delete games[player.id];
+					games[Object.keys(this.players)[0]] = this;
+
+					for (var playerID in this.players) {
+						this.players[playerID].inGame = this.id;
+					}
+
+					for (var playerID in players) {
+						if (players[playerID].inGame == null) {
+							io.to(playerID).emit('h', player.id + '|' + this.id + '|' + this.players[this.id].name);
+						}
+					}
+				}
+			} else {
+				delete games[this.id];
+
+				for (var playerID in players) {
+					if (players[playerID].inGame == null) {
+						io.to(playerID).emit('d', this.id);
+					}
+				}
+			}
+
+			player.inGame = null;
+		}
+	}
+
+	start() {
+		this.started = true;
+
+		for (var playerID in this.players) {
+			io.to(playerID).emit('s');
+		}
+
+		for (var playerID in players) {
+			if (players[playerID].inGame == null) {
+				io.to(playerID).emit('d', this.id);
+			}
+		}
+	}
+
+	changeReady(id, ready) {
+		this.players[id].ready = ready;
+
+		let allReady = true;
+		for (var playerID in this.players) {
+			if (!this.players[playerID].ready) {
+				allReady = false;
+				break;
+			}
+		}		
+
+		if (allReady) {
+			let array = Object.keys(players);
+			let currentIndex = array.length, randomIndex;
+
+			while (currentIndex != 0) {
+				randomIndex = Math.floor(Math.random() * currentIndex);
+				currentIndex--;
+				[array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+			}
+
+			for (var i=0; i<array.length; i+=2) {
+				this.players[array[i]].ready = false;
+
+				if (i == array.length-1) {
+					this.players[array[i]].opponent = '';
+
+					io.to(array[i]).emit('sr', 'bye');
+				} else {
+					this.players[array[i+1]].ready = false;
+					this.players[array[i]].opponent = array[i+1];
+					this.players[array[i+1]].opponent = array[i];
+
+					io.to(array[i]).emit('sr', '0|' + array[i+1]);
+					io.to(array[i+1]).emit('sr', '1|' + array[i]);
+				}
+			}
+		} else {
+			for (var playerID in this.players) {
+				io.to(playerID).emit('ready', +ready + '|' + id);
+			}
+		}
+	}
+
+	sendProducts(id, produced) {
+		for (var playerID in this.players) {
+			if (playerID != id) {
+				io.to(playerID).emit('p', playerID, produced);
+			}
+		}
+	}
+
+	playerSwing(id, mouseX, mouseY) {
+		if (this.players[id].opponent.length > 0 && this.players[this.players[id].opponent]) {
+			io.to(this.players[id].opponent).emit('swing', id + '|' + mouseX + '|' + mouseY);
+		}
 	}
 }
 
@@ -54,6 +165,8 @@ class ServerPlayer {
 		this.name = id;
 		this.inputs = '';
 		this.inGame = null;
+		this.ready = false;
+		this.opponent = '';
 	}
 
 	changeInputs(newInputs, position) {
@@ -68,26 +181,101 @@ class ServerPlayer {
 	}
 }
 
+function getGamesString() {
+	let gamesString = '';
+	for (var gameID in games) {
+		if (players[gameID] && !games[gameID].started) {
+			gamesString = gamesString + gameID + ':' + players[gameID].name + ':' + Object.keys(games[gameID].players).length + '|';
+		}
+	}
+	if (gamesString.length > 0) {
+		gamesString = gamesString.substring(0, gamesString.length - 1);
+	}
+
+	return gamesString;
+}
+
 io.on('connection', function(socket) {
 	console.log(socket.id + ' connected');
 	let player = new ServerPlayer(socket.id);
+	players[socket.id] = player;
 
-	if (Object.keys(games).length == 0) {
-		games[socket.id] = new ServerGame(socket.id);
-		games[socket.id].addPlayer(player);
-	} else {
-		let game = games[Object.keys(games)[0]];
-		for (var playerID in game.players) {
-			io.to(game.players[playerID]).emit('ho');
-		}
-		game.addPlayer(player);
-	}
 	io.to(socket.id).emit('id', socket.id);
+	io.to(socket.id).emit('g', getGamesString());
 
 	socket.on('disconnect', function() {
 		console.log(socket.id + ' disconnected');
 		if (player.inGame && games[player.inGame]) {
-			games[player.inGame].removePlayer(socket.id);
+			games[player.inGame].removePlayer(player);
+		}
+
+		delete players[socket.id];
+	});
+
+	socket.on('r', function(newName) {
+		player.name = newName;
+		if (player.inGame) {
+			let game = games[player.inGame]
+			for (var playerID in game.players) {
+				io.to(playerID).emit('r', socket.id + '|' + player.name);
+			}
+
+			if (player.inGame == player.id) {
+				for (var playerID in players) {
+					if (!players[playerID].inGame) {
+						io.to(playerID).emit('r', socket.id + '|' + player.name);
+					}
+				}
+			}
+		}
+	});
+
+	socket.on('c', function() {
+		if (player.inGame != socket.id && !games[socket.id]) {
+			games[socket.id] = new ServerGame(socket.id);
+			games[socket.id].addPlayer(player);
+
+			for (var playerID in players) {
+				if (players[playerID].inGame == null) {
+					io.to(playerID).emit('ng', socket.id + '|' + player.name);
+				}
+			}
+		}
+	});
+
+	socket.on('j', function(gameID) {
+		games[gameID].addPlayer(player);
+
+		for (var playerID in players) {
+			if (players[playerID].inGame == null) {
+				io.to(playerID).emit('np', gameID);
+			}
+		}
+	});
+
+	socket.on('b', function() {
+		if (player.inGame && games[player.inGame]) {
+			games[player.inGame].removePlayer(player);
+		}
+
+		io.to(socket.id).emit('g', getGamesString());
+	});
+
+	socket.on('s', function() {
+		if (player.inGame && games[player.inGame]) {
+			games[player.inGame].start();
+		}
+	});
+
+	socket.on('ready', function(ready) {
+		if (player.inGame && games[player.inGame]) {
+			games[player.inGame].changeReady(socket.id, ready);
+		}
+	});
+
+	socket.on('p', function(produced) {
+		if (player.inGame && games[player.inGame]) {
+			games[player.inGame].sendProducts(socket.id, produced);
 		}
 	});
 
@@ -98,6 +286,10 @@ io.on('connection', function(socket) {
 	socket.on('u', function(keyPosition) {
 		player.changeInputs(player.inputs.replace(keyPosition[0], ''), keyPosition.slice(1));
 	});
-});
 
-// io.to(socket.id).emit('data', someshit)
+	socket.on('swing', function(mousePosition) {
+		if (player.inGame && games[player.inGame]) {
+			games[player.inGame].playerSwing(socket.id, parseFloat(mousePosition.split('|')[0]), parseFloat(mousePosition.split('|')[1]));
+		}
+	});
+});
