@@ -123,7 +123,7 @@ class MobCompositeObject extends CompositeObject {
 		this.hp = hp;
 
 		this.hpTotal = hp;
-		this.recentlyDamagedFlashTime = 25;
+		this.recentlyDamagedFlashTime = 120;
 		this.dieFadeSpeed = 0.024;
 		this.aggroRange = 100;
 		this.name = 'Mob';
@@ -249,14 +249,17 @@ class ChildObject extends GameObject {
 	}
 
 	setXY(level, x, y, linked) {
+		let oldX = this.x;
+		let oldY = this.y;
+
+		super.setXY(level, x, y);
 		if (linked) {
-			let translationX = x - this.x;
-			let translationY = y - this.y;
+			let translationX = x - oldX;
+			let translationY = y - oldY;
 			for (var i=0; i<this.linkages.length; i++) {
 				this.linkages[i].translate(level, translationX, translationY, linked);
 			}
 		}
-		super.setXY(level, x, y);
 
 		if (this.parentLinkage) {
 			this.parentLinkage.setSpecificCalibration(this);
@@ -346,7 +349,7 @@ class ChildObject extends GameObject {
 			ang = mirrorAngle(ang);
 		}
 		ang = (ang - this.angle) % 360;
-		
+
 		return [getDistance(this.x, this.y, linkage.x, linkage.y), ang];
 	}
 

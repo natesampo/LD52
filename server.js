@@ -112,7 +112,7 @@ class ServerGame {
 		}		
 
 		if (allReady) {
-			let array = Object.keys(players);
+			let array = Object.keys(this.players);
 			let currentIndex = array.length, randomIndex;
 
 			while (currentIndex != 0) {
@@ -145,16 +145,43 @@ class ServerGame {
 	}
 
 	sendProducts(id, produced) {
-		for (var playerID in this.players) {
-			if (playerID != id) {
-				io.to(playerID).emit('p', playerID, produced);
-			}
+		if (this.players[id].opponent.length > 0 && this.players[this.players[id].opponent]) {
+			io.to(this.players[id].opponent).emit('p', id, produced);
 		}
 	}
 
 	playerSwing(id, mouseX, mouseY) {
 		if (this.players[id].opponent.length > 0 && this.players[this.players[id].opponent]) {
 			io.to(this.players[id].opponent).emit('swing', id + '|' + mouseX + '|' + mouseY);
+		}
+	}
+
+	playerDamage(id, damage) {
+		if (this.players[id].opponent.length > 0 && this.players[this.players[id].opponent]) {
+			io.to(this.players[id].opponent).emit('dmg', id + '|' + damage);
+		}
+	}
+
+	playerLost(id) {
+		if (this.players[id]) {
+			this.players[id].lost = true;
+
+			let notLost = 0;
+			let lastNotLost = null;
+			for (var playerID in this.players) {
+				if (!this.players[playerID].lost) {
+					notLost++;
+					lastNotLost = playerID;
+
+					io.to(playerID).emit('l', id);
+				}
+			}
+
+			if (notLost == 1 && lastNotLost != null) {
+				io.to(lastNotLost).emit('w');
+			}
+
+			this.removePlayer(players[id]);
 		}
 	}
 }
@@ -167,6 +194,7 @@ class ServerPlayer {
 		this.inGame = null;
 		this.ready = false;
 		this.opponent = '';
+		this.lost = false;
 	}
 
 	changeInputs(newInputs, position) {
@@ -290,6 +318,18 @@ io.on('connection', function(socket) {
 	socket.on('swing', function(mousePosition) {
 		if (player.inGame && games[player.inGame]) {
 			games[player.inGame].playerSwing(socket.id, parseFloat(mousePosition.split('|')[0]), parseFloat(mousePosition.split('|')[1]));
+		}
+	});
+
+	socket.on('dmg', function(damage) {
+		if (player.inGame && games[player.inGame]) {
+			games[player.inGame].playerDamage(socket.id, damage);
+		}
+	});
+
+	socket.on('l', function() {
+		if (player.inGame && games[player.inGame]) {
+			games[player.inGame].playerLost(socket.id);
 		}
 	});
 });

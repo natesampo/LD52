@@ -33,6 +33,14 @@ function render(game) {
 			}
 		}
 
+		if (level.resultOpacity > 0) {
+			context.fillStyle = 'rgba(255, 255, 255, ' + level.resultOpacity + ')';
+			context.font = canvas.height/6 + 'px Helvetica';
+			context.textAlign = 'center';
+			context.textBaseline = 'middle';
+			context.fillText(level.result, canvas.width/2, canvas.height/2);
+		}
+
 		if (level.state == 'preGame') {
 			context.font = canvas.height/30 + 'px Helvetica';
 			context.fillStyle = 'rgba(0, 0, 0, 1)';
@@ -97,6 +105,30 @@ function render(game) {
 			context.font = canvas.height/30 + 'px Helvetica';
 			context.fillText('Start', canvas.width/2, canvas.height * 0.65 + canvas.height/16);
 		} else if (level.state == 'factory') {
+			let moneyCurveSize = level.tileSize/8;
+			let moneyWidth = canvas.width/8;
+			let moneyHeight = canvas.height/20;
+
+			context.fillStyle = 'rgba(70, 70, 70, 1)';
+			context.strokeStyle = 'rgba(0, 0, 0, 1)';
+			context.lineWidth = 4;
+			context.beginPath();
+			context.moveTo(canvas.width/2 + moneyWidth/2 + moneyCurveSize, 0);
+			context.lineTo(canvas.width/2 + moneyWidth/2 + moneyCurveSize, moneyHeight);
+			context.arc(canvas.width/2 + moneyWidth/2, moneyHeight, moneyCurveSize, 0, Math.PI/2, false);
+			context.lineTo(canvas.width/2 - moneyWidth/2, moneyHeight + moneyCurveSize);
+			context.arc(canvas.width/2 - moneyWidth/2, moneyHeight, moneyCurveSize, Math.PI/2, Math.PI, false);
+			context.lineTo(canvas.width/2 - moneyWidth/2 - moneyCurveSize, 0);
+			context.fill();
+			context.stroke();
+			context.closePath();
+
+			context.font = '28px Georgia';
+			context.fillStyle = 'rgba(252, 186, 3, 1)';
+			context.textAlign = 'center';
+			context.textBaseline = 'middle';
+			context.fillText('$' + players[id].produced['money'], canvas.width/2, moneyHeight/2 + moneyCurveSize/2);
+
 			if (players[id].ready) {
 				context.fillStyle = 'rgba(0, 255, 0, 1)';
 			} else {
@@ -114,7 +146,9 @@ function render(game) {
 
 			let i=0;
 			for (var playerID in players) {
-				if (players[playerID].ready) {
+				if (players[playerID].produced['lives'] <= 0) {
+					context.fillStyle = 'rgba(0, 0, 0, 1)';
+				} else if (players[playerID].ready) {
 					context.fillStyle = 'rgba(0, 255, 0, 1)';
 				} else {
 					context.fillStyle = 'rgba(255, 0, 0, 1)';
@@ -126,14 +160,6 @@ function render(game) {
 				context.fillText(players[playerID].name, canvas.width - canvas.height/100, canvas.height - canvas.height/13 - canvas.height/100 - i * canvas.height/40);
 
 				i++;
-			}
-
-			if (level.byeOpacity > 0) {
-				context.fillStyle = 'rgba(255, 255, 255, ' + level.byeOpacity + ')';
-				context.font = canvas.height/6 + 'px Helvetica';
-				context.textAlign = 'center';
-				context.textBaseline = 'middle';
-				context.fillText('Bye Round', canvas.width/2, canvas.height/2);
 			}
 		}
 	}
@@ -158,6 +184,25 @@ function tick(game) {
 		if (screen.camera.y < level.scrollSpeed) {
 			screen.camera.y = 0;
 			level.state = 'combat';
+		}
+	} else if (level.state == 'movingDown') {
+		screen.camera.y += level.scrollSpeed;
+
+		if (screen.camera.y > 21 - level.scrollSpeed) {
+			screen.camera.y = 21;
+			players[id].produced['money'] += 100;
+
+			if (players[id].produced['basic'] > 1) {
+				level.state = 'choosingBasic';
+			} else if (players[id].produced['basicUpgrade'] > 1) {
+				level.state = 'choosingBasicUpgrade';
+			} else if (players[id].produced['ultimate'] > 1) {
+				level.state = 'choosingUltimate';
+			} else if (players[id].produced['ultimateUpgrade'] > 1) {
+				level.state = 'choosingUltimateUpgrade';
+			} else {
+				level.state = 'factory';
+			}
 		}
 	}
 
@@ -384,9 +429,9 @@ socket.on('ng', function(idAndName) {
 	}
 });
 
-socket.on('np', function(id) {
+socket.on('np', function(gameID) {
 	if (level && level.state == 'preGame') {
-		games[id][1]++;
+		games[gameID][1]++;
 	}
 });
 
@@ -434,6 +479,8 @@ socket.on('d', function(playerID) {
 				delete players[playerID];
 				delete inputs[playerID];
 			}
+		} else if (players[playerID]) {
+			players[playerID].produced['lives'] = 0;
 		}
 	}
 });
@@ -462,9 +509,13 @@ socket.on('sr', function(opponentID) {
 			players[id].produced[product] += level.products[product];
 		}
 	}
+	players[id].hp = players[id].produced['health'];
+	players[id].hpTotal = players[id].produced['health'];
+	players[id].attackDamage = players[id].produced['attack'];
 
 	if (opponentID == 'bye') {
-		level.byeOpacity = 1;
+		level.result = 'Bye Round';
+		level.resultOpacity = 1;
 	} else {
 		if (level && id && players[id] && players[opponentID.split('|')[1]]) {
 			players[id].base.setXY(level, 5 + 5*parseInt(opponentID.split('|')[0]), 5, true);
@@ -479,11 +530,11 @@ socket.on('sr', function(opponentID) {
 	}
 });
 
-socket.on('p', function(id, products) {
-	players[id].produced = products;
-	players[id].hp = products['health'];
-	players[id].hpTotal = products['health'];
-	players[id].attackDamage = products['attack'];
+socket.on('p', function(playerID, products) {
+	players[playerID].produced = products;
+	players[playerID].hp = products['health'];
+	players[playerID].hpTotal = products['health'];
+	players[playerID].attackDamage = products['attack'];
 });
 
 socket.on('i', function(inputData) {
@@ -498,7 +549,58 @@ socket.on('i', function(inputData) {
 
 socket.on('swing', function(mousePosition) {
 	if (level && players[mousePosition.split('|')[0]]) {
-		players[mousePosition.split('|')[0]].swing(level, parseFloat(mousePosition.split('|')[1]), parseFloat(mousePosition.split('|')[2]));
+		let weaponSwingParticle = players[mousePosition.split('|')[0]].swing(level, parseFloat(mousePosition.split('|')[1]), parseFloat(mousePosition.split('|')[2]));
+		if (weaponSwingParticle.hit) {
+			socket.emit('dmg', players[mousePosition.split('|')[0]].produced['attack']);
+
+			if (players[id].hp <= 0) {
+				level.resultOpacity = 1;
+
+				players[id].produced['lives']--;
+				if (players[id].produced['lives'] <= 0) {
+					level.state = 'youLose';
+					level.result = 'You Lose!';
+					socket.emit('l');
+				} else {
+					level.state = 'movingDown';
+					level.result = 'Lost Round';
+
+					for (var playerID in players) {
+						players[playerID].base.setXY(level, -5, -5, true);
+					}
+				}
+			}
+		}
+	}
+});
+
+socket.on('dmg', function(damage) {
+	if (players[damage.split('|')[0]]) {
+		players[damage.split('|')[0]].damage(level, parseFloat(damage.split('|')[1]));
+
+		if (players[damage.split('|')[0]].hp <= 0) {
+			level.state = 'movingDown';
+			level.result = 'Won Round';
+			level.resultOpacity = 1;
+
+			for (var playerID in players) {
+				players[playerID].base.setXY(level, -5, -5, true);
+			}
+		}
+	}
+});
+
+socket.on('l', function(playerID) {
+	if (players[playerID]) {
+		players[playerID].produced['lives'] = 0;
+	}
+});
+
+socket.on('w', function() {
+	if (level) {
+		level.state = 'youWin';
+		level.result = 'You Win!';
+		level.resultOpacity = 1;
 	}
 });
 

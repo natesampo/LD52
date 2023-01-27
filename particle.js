@@ -450,6 +450,7 @@ class EnemyWeaponSwingParticle extends WeaponSwingParticle {
 	constructor(level, damage, startPoint, endPoint, centerPoint, arcSize, mirror, color, opacity, velX, velY, velRot, gravity, airResistance, duration, renderPriority) {
 		super(startPoint, endPoint, centerPoint, arcSize, mirror, color, opacity, velX, velY, velRot, gravity, airResistance, duration, renderPriority);
 
+		this.hit = false;
 		for (var i=0; i<level.factions['player'].length; i++) {
 			let player = level.factions['player'][i];
 			// we're only checking if the object's 4 corners or the middle are colliding, but its good enough
@@ -484,6 +485,7 @@ class EnemyWeaponSwingParticle extends WeaponSwingParticle {
 			if (newContext.isPointInPath(playerCenterX, playerCenterY) || newContext.isPointInPath(boundingBox[0], boundingBox[2]) || newContext.isPointInPath(boundingBox[1], boundingBox[2])
 				|| newContext.isPointInPath(boundingBox[1], boundingBox[3]) || newContext.isPointInPath(boundingBox[0], boundingBox[3])) {
 				player.damage(level, damage);
+				this.hit = true;
 			}
 
 			newContext.closePath();

@@ -18,6 +18,7 @@ class Factory extends GameObject {
 
 		this.notFulfilledParticle = new NotFulfilledParticle(this);
 		this.inputsCleared = false;
+		this.paidFor = false;
 	}
 
 	place(level) {
@@ -392,6 +393,8 @@ class CompositeFactory extends CompositeObject {
 		for (var i=0; i<inputs.length; i++) {
 			this.inputsFulfilled.push(false);
 		}
+
+		this.paidFor = false;
 	}
 
 	place(level) {

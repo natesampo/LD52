@@ -12,7 +12,7 @@ class PlayerObject extends MobCompositeObject {
 		hammer.arcPoint = [0.5, -0.55];
 		hammer.arcSize = 0.5;
 
-		super({'frontLeg': frontLeg, 'backLeg': backLeg, 'arm': arm, 'hammer': hammer, 'hammerarm': hammerarm, 'torso': torso}, torso, 0.03, 50);
+		super({'frontLeg': frontLeg, 'backLeg': backLeg, 'arm': arm, 'hammer': hammer, 'hammerarm': hammerarm, 'torso': torso}, torso, 0.03, 100);
 
 		this.base.faction = 'player';
 		this.legDirection = true;
@@ -21,7 +21,7 @@ class PlayerObject extends MobCompositeObject {
 		this.attacking = false;
 		this.attackRecoverySpeed = 1.5;
 
-		this.produced = {'money': 100, 'health': 10, 'attack': 1};
+		this.produced = {'money': 100, 'health': 10, 'attack': 1, 'lives': 1};
 		this.ready = false;
 	}
 
@@ -129,16 +129,21 @@ class PlayerObject extends MobCompositeObject {
 		let weaponArcEnd = this.children['hammer'].getArcPoint();
 		this.children['hammerarm'].setRotation(level, 180, true);
 
+		let weaponSwingParticle;
 		//startPoint, endPoint, centerPoint, color, opacity, velX, velY, velRot, gravity, airResistance, duration, fadeSpeed
 		if (this.base.faction == 'player') {
-			level.addObject(new WeaponSwingParticle((weaponArcStart[1] > weaponArcEnd[1]) ? weaponArcEnd : weaponArcStart, (weaponArcStart[1] > weaponArcEnd[1]) ? weaponArcStart : weaponArcEnd,
+			weaponSwingParticle = new WeaponSwingParticle((weaponArcStart[1] > weaponArcEnd[1]) ? weaponArcEnd : weaponArcStart, (weaponArcStart[1] > weaponArcEnd[1]) ? weaponArcStart : weaponArcEnd,
 				[this.children['hammerarm'].x, this.children['hammerarm'].y], this.children['hammer'].arcSize, weaponArcStart[1] > weaponArcEnd[1],
-				'rgba(210, 210, 210, 1)', 1, 0, 0, 0, 0, 0, 90, 3));
+				'rgba(210, 210, 210, 1)', 1, 0, 0, 0, 0, 0, 90, 3);
 		} else {
-			level.addObject(new EnemyWeaponSwingParticle(level, this.attackDamage, (weaponArcStart[1] > weaponArcEnd[1]) ? weaponArcEnd : weaponArcStart, (weaponArcStart[1] > weaponArcEnd[1]) ? weaponArcStart : weaponArcEnd,
+			weaponSwingParticle = new EnemyWeaponSwingParticle(level, this.produced['attack'], (weaponArcStart[1] > weaponArcEnd[1]) ? weaponArcEnd : weaponArcStart, (weaponArcStart[1] > weaponArcEnd[1]) ? weaponArcStart : weaponArcEnd,
 				[this.children['hammerarm'].x, this.children['hammerarm'].y], this.children['hammer'].arcSize, weaponArcStart[1] > weaponArcEnd[1],
-				'rgba(210, 210, 210, 1)', 1, 0, 0, 0, 0, 0, 90, 3));
+				'rgba(210, 210, 210, 1)', 1, 0, 0, 0, 0, 0, 90, 3);
 		}
+
+		level.addObject(weaponSwingParticle);
+
+		return weaponSwingParticle;
 	}
 
 	processDeath(level) {

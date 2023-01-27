@@ -249,7 +249,7 @@ class LeftContainer extends UIElement {
 					let left = this.margin + (2 * this.curveSize + tileSize + this.margin) * j;
 					let top = tileSize / 8 + 24 + this.margin/2 + (2 * this.curveSize + tileSize + this.margin) * i;
 
-					if (id && players[id] && players[id].produced['money'] >= this.harvesterObjects[i * 2 + j].cost && x > left && x < left + 2 * this.curveSize + tileSize && y > top && y < top + 2 * this.curveSize + tileSize) {
+					if (x > left && x < left + 2 * this.curveSize + tileSize && y > top && y < top + 2 * this.curveSize + tileSize) {
 						let renderObjects = this.harvesterObjects[i * 2 + j];					
 						level.addPreviewObject((renderObjects[0] instanceof ChildObject) ? renderObjects[0].parent.createNew() : renderObjects[0].createNew());
 
@@ -589,11 +589,14 @@ class RightContainer extends UIElement {
 			let refreshHeight = tileSize / 2.5;
 			let refreshX = level.screen.width * window.innerWidth - this.width/2 - refreshWidth/2;
 			let refreshY = this.height - this.curveSize - refreshHeight;
-			if (x > refreshX && x < refreshX + refreshWidth && y > refreshY && y < refreshY + refreshHeight) {
+			if (x > refreshX && x < refreshX + refreshWidth && y > refreshY && y < refreshY + refreshHeight &&
+				level.factions['player'] && level.factions['player'][0] instanceof ChildObject && level.factions['player'][0].parent.produced['money'] >= 10) {
+
 				shuffle(this.options);
 				for (var i=0; i<this.chosenObjects.length; i++) {
 					this.chosenObjects[i] = this.options[i];
 				}
+				level.factions['player'][0].parent.produced['money'] -= 10;
 			} else {
 				for (var i=0; i<2; i++) {
 					let found = false;
@@ -601,7 +604,7 @@ class RightContainer extends UIElement {
 						let left = this.x + this.margin + (2 * this.curveSize + tileSize + this.margin) * j;
 						let top = tileSize / 8 + 24 + this.margin/2 + (2 * this.curveSize + tileSize + this.margin) * i;
 
-						if (id && players[id] && players[id].produced['money'] >= this.chosenObjects[i * 2 + j].cost && x > left && x < left + 2 * this.curveSize + tileSize && y > top && y < top + 2 * this.curveSize + tileSize) {
+						if (x > left && x < left + 2 * this.curveSize + tileSize && y > top && y < top + 2 * this.curveSize + tileSize) {
 							let renderObjects = this.chosenObjects[i * 2 + j];
 							level.addPreviewObject((renderObjects[0] instanceof ChildObject) ? renderObjects[0].parent.createNew() : renderObjects[0].createNew());
 

@@ -995,16 +995,19 @@ document.addEventListener('visibilitychange', function () {
 });
 
 function gameLoop(game) {
-	tick(game);
-	for (var i=0; i<game.screens.length; i++) {
-		if (game.timeSinceStart() - totalTimeUnloaded >= (1000/game.ticksPerSecond) * game.tickID) {
+	while (game.timeSinceStart() - totalTimeUnloaded >= (1000/game.ticksPerSecond) * game.tickID) {
+		tick(game);
+		for (var i=0; i<game.screens.length; i++) {
 			if (!game.screens[i].level.levelEditor) {
 				game.screens[i].tick();
 			}
-			
-			renderScreen(game.screens[i]);
+
 			game.tickID++;
 		}
+	}
+
+	for (var i=0; i<game.screens.length; i++) {
+		renderScreen(game.screens[i]);
 	}
 	render(game);
 

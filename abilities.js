@@ -11,25 +11,6 @@ class Ability extends UIButton {
 		this.ultimate = ultimate;
 		this.targeting = targeting;
 		this.tutorial = tutorial;
-
-		// how long it takes to travel from selection to bottom UI slot
-		this.timeToSlot = 41;
-
-		this.slot = 0;
-		this.spinCounter = 0;
-		this.movingToSlot = false;
-		this.cooldownCounter = 0;
-		this.durationCounter = 0;
-		this.speedX = 0;
-		this.speedY = 0;
-		this.speedScaleX = 0;
-		this.speedScaleY = 0;
-		this.destinationX = 0;
-		this.destinationY = 0;
-		this.selecting = false;
-		this.activated = false;
-		this.mouseFollowObject = null;
-		this.notYetUsed = true;
 	}
 
 	onImageLoad(level, newImg) {

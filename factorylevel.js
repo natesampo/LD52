@@ -3,7 +3,7 @@ class FactoryLevel extends Level {
 		super(color, tileSize, objects);
 
 		this.flashTime = 120;
-		this.byeTime = 240;
+		this.resultTime = 180;
 		this.scrollSpeed = 0.1;
 
 		this.previewObject = null;
@@ -15,12 +15,12 @@ class FactoryLevel extends Level {
 		this.flashTimer = 0;
 		this.flash = false;
 		this.state = 'preGame';
-		this.byeOpacity = 0;
+		this.resultOpacity = 0;
 	}
 
 	getTickOrder() {
 		let tickOrder = [];
-		if (this.state != 'preGame' && this.state != 'lobby') {
+		if (this.state != 'preGame' && this.state != 'lobby' && this.state != 'movingUp' && this.state != 'movingDown' && this.state != 'youLose' && this.state != 'youWin') {
 			for (var i in this.map) {
 				for (var j in this.map[i]) {
 					for (var k=this.map[i][j].length-1; k>=0; k--) {
@@ -45,8 +45,8 @@ class FactoryLevel extends Level {
 			this.flashTimer = 0;
 		}
 
-		if (this.byeOpacity > 0) {
-			this.byeOpacity -= 1/this.byeTime;
+		if (this.resultOpacity > 0 && this.state != 'youLose' && this.state != 'youWin') {
+			this.resultOpacity -= 1/this.resultTime;
 		}
 
 		super.tick();
@@ -60,6 +60,10 @@ class FactoryLevel extends Level {
 
 	checkPreviewValid() {
 		if (this.previewObject) {
+			if (!this.previewObject.paidFor && this.factions['player'] && this.factions['player'][0] instanceof ChildObject && this.factions['player'][0].parent.produced['money'] < this.previewObject.cost) {
+				return 'Not enough money';
+			}
+
 			let tile;
 			if (this.previewObject instanceof CompositeObject) {
 				tile = this.map[this.previewObject.base.x << 0][this.previewObject.base.y << 0];
@@ -629,8 +633,9 @@ class FactoryLevel extends Level {
 
 			this.removeFromMap(obj);
 		} else {
-			if (id && players[id] && players[id].produced['money']) {
-				players[id].produced['money'] -= obj.cost;
+			if (!obj.paidFor && this.factions['player'] && this.factions['player'][0] instanceof ChildObject) {
+				this.factions['player'][0].parent.produced['money'] -= obj.cost;
+				obj.paidFor = true;
 			}
 
 			if (obj instanceof CompositeObject) {
