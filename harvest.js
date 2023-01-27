@@ -1079,7 +1079,7 @@ class Pipeline extends GameObject {
 				context.fillStyle = 'rgba(0, 0, 0, 1)';
 				context.textAlign = 'left';
 				context.textBaseline = 'top';
-				context.fillText('Press R to cycle pipe options', (this.x + 1.1) * (tileSize - 1), (this.y + 0.75) * (tileSize - 1));
+				context.fillText('Press R to cycle pipe options', (this.x - screen.camera.x + 1.1) * (tileSize - 1), (this.y - screen.camera.y + 0.75) * (tileSize - 1));
 			}
 		}
 

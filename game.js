@@ -190,7 +190,6 @@ function tick(game) {
 
 		if (screen.camera.y > 21 - level.scrollSpeed) {
 			screen.camera.y = 21;
-			players[id].produced['money'] += 100;
 
 			if (players[id].produced['basic'] > 1) {
 				level.state = 'choosingBasic';
@@ -512,6 +511,7 @@ socket.on('sr', function(opponentID) {
 	players[id].hp = players[id].produced['health'];
 	players[id].hpTotal = players[id].produced['health'];
 	players[id].attackDamage = players[id].produced['attack'];
+	players[id].produced['money'] += 100;
 
 	if (opponentID == 'bye') {
 		level.result = 'Bye Round';
