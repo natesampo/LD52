@@ -687,6 +687,8 @@ class CompositeFactory extends CompositeObject {
 			}
 		}
 
+		this.inputsCleared = !contains(this.inputsFulfilled, false);
+
 		this.inputsFulfilled = [];
 		for (var i=0; i<this.inputDirections.length; i++) {
 			switch(this.inputDirections[i]) {
@@ -731,6 +733,8 @@ class CompositeFactory extends CompositeObject {
 
 		if (allFulfilled && !this.inputsCleared) {
 			level.addObject(new CheckmarkParticle(this.x << 0, this.y << 0, -0.006, 120));
+		} else if (!allFulfilled && this.inputsCleared) {
+			level.addObject(new XParticle(this.x << 0, this.y << 0, -0.006, 120));
 		}
 
 		if (allFulfilled && this.product.length > 0) {
@@ -1517,7 +1521,7 @@ class Keep extends Factory {
 class Hospital extends Factory {
 	constructor(x, y) {
 		let sprite = new Sprite('hospital_1_1.png', 0, 0, 1, 1, 1, 0.5, 0.5);
-		super(x, y, sprite, ['red', 'black'], [0, 1], [], [], 'health', 1, 30, 'Hospital');
+		super(x, y, sprite, ['red', 'black'], [0, 1], [], [], 'health', 2, 30, 'Hospital');
 	}
 
 	createNew() {

@@ -21,7 +21,7 @@ class PlayerObject extends MobCompositeObject {
 		this.attacking = false;
 		this.attackRecoverySpeed = 1.5;
 
-		this.produced = {'money': 100, 'health': 10, 'attack': 1, 'lives': 6};
+		this.produced = {'money': 100, 'health': 10, 'attack': 1, 'speed': 0, 'lives': 6};
 		this.ready = false;
 
 		this.slot1 = null;

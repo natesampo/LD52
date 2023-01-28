@@ -162,6 +162,12 @@ class ServerGame {
 		}
 	}
 
+	playerAbility(id, upgradesAndAbility) {
+		if (this.players[id].opponent.length > 0 && this.players[this.players[id].opponent]) {
+			io.to(this.players[id].opponent).emit('ability', id + '|' + upgradesAndAbility);
+		}
+	}
+
 	playerLost(id) {
 		if (this.players[id]) {
 			this.players[id].lost = true;
@@ -324,6 +330,12 @@ io.on('connection', function(socket) {
 	socket.on('dmg', function(damage) {
 		if (player.inGame && games[player.inGame]) {
 			games[player.inGame].playerDamage(socket.id, damage);
+		}
+	});
+
+	socket.on('ability', function(upgradesAndAbility) {
+		if (player.inGame && games[player.inGame]) {
+			games[player.inGame].playerAbility(socket.id, upgradesAndAbility);
 		}
 	});
 

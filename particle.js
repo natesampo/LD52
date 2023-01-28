@@ -660,9 +660,10 @@ class ShapeFadeFloorParticle extends ShapeFadeParticle {
 }
 
 class ShapeDamageOnceParticle extends ShapeParticle {
-	constructor(shape, shapeData, color, outlineColor, x, y, angle, opacity, velX, velY, velRot, gravity, airResistance, duration, damage, renderPriority) {
+	constructor(shape, shapeData, color, outlineColor, x, y, angle, opacity, velX, velY, velRot, gravity, airResistance, duration, damage, renderPriority, hitCallback) {
 		super(shape, shapeData, color, outlineColor, x, y, angle, opacity, velX, velY, velRot, gravity, airResistance, duration, renderPriority);
 		this.damage = damage;
+		this.hitCallback = hitCallback;
 
 		this.immuneObjects = [];
 		this.immuneFactions = [];
@@ -687,7 +688,11 @@ class ShapeDamageOnceParticle extends ShapeParticle {
 									getDistance(boundingBox[1], boundingBox[3], this.x, this.y) < this.shapeData || getDistance(boundingBox[0], boundingBox[3], this.x, this.y) < this.shapeData) {
 
 									this.alreadyHit.push(potentialTarget);
-									potentialTarget.damage(level, this.damage);
+
+									if (!contains(this.immuneFactions, 'player')) {
+										potentialTarget.damage(level, this.damage);
+										this.hitCallback(this.damage);
+									}
 								}
 								break;
 						}

@@ -19,8 +19,10 @@ class Ability extends GameObject {
 		}
 	}
 
-	activate(level) {
-		this.cooldownTimer = this.cooldown * 120;
+	activate(level, upgradeCount, player, hitCallback) {
+		if (player.base.faction == 'player') {
+			this.cooldownTimer = this.cooldown * 120;
+		}
 	}
 
 	render(screen) {
@@ -52,6 +54,31 @@ class Ability extends GameObject {
 class Pebble extends Ability {
 	constructor() {
 		super('abilitypebble_1_1.png', 'Pebble', 'Shoot a pebble at your opponent', 2, 1, 'point');
+
+		this.speed = 0.125;
+	}
+
+	activate(level, upgradeCount, player, hitCallback) {
+		super.activate(level, upgradeCount, player, hitCallback);
+
+		let playerFaction = player.base.faction;
+		let otherFaction = 'enemy';
+		if (player.base.faction == 'enemy') {
+			otherFaction = 'player';
+		}
+
+		if (level.factions[otherFaction]) {
+			for (var j=0; j<level.factions[otherFaction].length; j++) {
+				if (level.factions[otherFaction][j] instanceof ChildObject && level.factions[otherFaction][j].parent.base.x > 0 && level.factions[otherFaction][j].parent.base.y > 0) {
+					let enemy = level.factions[otherFaction][j].parent;
+					let angle = getAngleRadians(player.base.x, player.base.y, enemy.base.x, enemy.base.y);
+					let pebbleParticle = new ShapeDamageOnceParticle('circle', 0.1, 'rgba(100, 100, 100, 1)', 'rgba(50, 50, 50, 1)', player.base.x, player.base.y, 0, 1, Math.cos(angle) * this.speed, Math.sin(angle) * this.speed, 0, 0, 0, 240, this.damage + upgradeCount, 0, hitCallback);
+					pebbleParticle.immuneFactions.push(playerFaction);
+					level.addObject(pebbleParticle);
+					break;
+				}
+			}
+		}
 	}
 }
 

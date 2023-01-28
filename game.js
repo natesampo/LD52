@@ -435,18 +435,42 @@ function tick(game) {
 				obj.base.y + obj.base.sprite.centerY * obj.base.sprite.height + 0.5 * coastDirectionY << 0);
 			if (currTile && currTile.sprite.name != 'water_1_1.png') {
 
-				obj.base.translate(level, obj.speed * movementDirection[0], 0, true);
+				obj.base.translate(level, (obj.speed + 0.005 * obj.produced['speed']) * movementDirection[0], 0, true);
 			}
 
 			currTile = level.getXYTile(obj.base.x + obj.base.sprite.centerX * obj.base.sprite.width + 0.5 * coastDirectionX << 0,
 				obj.base.y + obj.base.sprite.centerY * obj.base.sprite.height + obj.base.parent.speed * movementDirection[1] + 0.5 * coastDirectionY << 0)
 			if (currTile && currTile.sprite.name != 'water_1_1.png') {
 
-				obj.base.translate(level, 0, obj.speed * movementDirection[1], true);
+				obj.base.translate(level, 0, (obj.speed + 0.005 * obj.produced['speed']) * movementDirection[1], true);
 			}
 
 			if (movementDirection[0] != 0) {
 				obj.setMirror(level, movementDirection[0] < 0);
+			}
+		}
+	}
+}
+
+function getDamaged(damage) {
+	if (id && players[id]) {
+		socket.emit('dmg', damage);
+
+		if (players[id].hp <= 0) {
+			level.resultOpacity = 1;
+
+			players[id].produced['lives']--;
+			if (players[id].produced['lives'] <= 0) {
+				level.state = 'youLose';
+				level.result = 'You Lose!';
+				socket.emit('l');
+			} else {
+				level.state = 'movingDown';
+				level.result = 'Lost Round';
+
+				for (var playerID in players) {
+					players[playerID].base.setXY(level, -5, -5, true);
+				}
 			}
 		}
 	}
@@ -482,17 +506,20 @@ addKeyDownListener(function(key) {
 				break;
 			case 'KeyQ':
 				if (players[id].slot1 && players[id].slot1.cooldownTimer == 0) {
-					players[id].slot1.activate(level);
+					players[id].slot1.activate(level, players[id].slot1.upgrades, players[id], function (dmg) {getDamaged(dmg);});
+					socket.emit('ability', players[id].slot1.upgrades + '|' + players[id].slot1.name);
 				}
 				break;
 			case 'KeyE':
 				if (players[id].slot2 && players[id].slot2.cooldownTimer == 0) {
-					players[id].slot2.activate(level);
+					players[id].slot2.activate(level, players[id].slot2.upgrades, players[id], function (dmg) {getDamaged(dmg);});
+					socket.emit('ability', players[id].slot2.upgrades + '|' + players[id].slot2.name);
 				}
 				break;
 			case 'KeyR':
 				if (players[id].slot3 && players[id].slot3.cooldownTimer == 0) {
-					players[id].slot3.activate(level);
+					players[id].slot3.activate(level, players[id].slot3.upgrades, players[id], function (dmg) {getDamaged(dmg);});
+					socket.emit('ability', players[id].slot3.upgrades + '|' + players[id].slot3.name);
 				}
 				break;
 		}
@@ -916,25 +943,7 @@ socket.on('swing', function(mousePosition) {
 	if (level && players[mousePosition.split('|')[0]]) {
 		let weaponSwingParticle = players[mousePosition.split('|')[0]].swing(level, parseFloat(mousePosition.split('|')[1]), parseFloat(mousePosition.split('|')[2]));
 		if (weaponSwingParticle.hit) {
-			socket.emit('dmg', players[mousePosition.split('|')[0]].produced['attack']);
-
-			if (players[id].hp <= 0) {
-				level.resultOpacity = 1;
-
-				players[id].produced['lives']--;
-				if (players[id].produced['lives'] <= 0) {
-					level.state = 'youLose';
-					level.result = 'You Lose!';
-					socket.emit('l');
-				} else {
-					level.state = 'movingDown';
-					level.result = 'Lost Round';
-
-					for (var playerID in players) {
-						players[playerID].base.setXY(level, -5, -5, true);
-					}
-				}
-			}
+			getDamaged(players[mousePosition.split('|')[0]].produced['attack']);
 		}
 	}
 });
@@ -951,6 +960,23 @@ socket.on('dmg', function(damage) {
 			for (var playerID in players) {
 				players[playerID].base.setXY(level, -5, -5, true);
 			}
+		}
+	}
+});
+
+socket.on('ability', function(idAndUpgradesAndAbility) {
+	let playerID = idAndUpgradesAndAbility.split('|')[0];
+	if (players[playerID]) {
+		let ability = idAndUpgradesAndAbility.split('|')[2];
+		let abilityNumber = -1;
+		switch(ability) {
+			case 'Pebble':
+				abilityNumber = 0;
+				break;
+		}
+
+		if (abilityNumber > -1) {
+			level.basicAbilities[abilityNumber].activate(level, parseInt(idAndUpgradesAndAbility.split('|')[1]), players[playerID], function (dmg) {getDamaged(dmg);});
 		}
 	}
 });
