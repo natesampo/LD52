@@ -16,11 +16,24 @@ class FactoryLevel extends Level {
 		this.flash = false;
 		this.state = 'preGame';
 		this.resultOpacity = 0;
+
+		this.basicAbilities = [new Pebble(), new Bomb(), new Forcefield(), new Jump(), new Invisible()];
+		this.ultimateAbilities = [new Pig(), new Dash()];
+
+		for (var i=0; i<this.basicAbilities.length; i++) {
+			this.loadSprite(this.basicAbilities[i].sprite.name);
+		}
+
+		for (var i=0; i<this.ultimateAbilities.length; i++) {
+			this.loadSprite(this.ultimateAbilities[i].sprite.name);
+		}
 	}
 
 	getTickOrder() {
 		let tickOrder = [];
-		if (this.state != 'preGame' && this.state != 'lobby' && this.state != 'movingUp' && this.state != 'movingDown' && this.state != 'youLose' && this.state != 'youWin') {
+		if (this.state != 'preGame' && this.state != 'lobby' && this.state != 'movingUp' && this.state != 'movingDown' && this.state != 'youLose' && this.state != 'youWin' && this.state != 'choosingBasic' &&
+			this.state != 'choosingBasicUpgrade' && this.state != 'choosingUltimate') {
+
 			for (var i in this.map) {
 				for (var j in this.map[i]) {
 					for (var k=this.map[i][j].length-1; k>=0; k--) {
@@ -32,6 +45,14 @@ class FactoryLevel extends Level {
 					}
 				}
 			}
+		}
+
+		for (var i=0; i<this.basicAbilities.length; i++) {
+			tickOrder.push(this.basicAbilities[i]);
+		}
+
+		for (var i=0; i<this.ultimateAbilities.length; i++) {
+			tickOrder.push(this.ultimateAbilities[i]);
 		}
 
 		return tickOrder;
@@ -737,49 +758,51 @@ function launchFactoryLevel() {
 
 			switch(which) {
 				case 1:
-					let clicked = false;
-					for (var i=0; i<newScreen.ui.length; i++) {
-						let element = newScreen.ui[i];
-						if ((element instanceof UIButton || element instanceof LeftContainer || element instanceof RightContainer) && element.isInside(x, y)) {
-							element.onClick(level, game.lastMouseX, game.lastMouseY);
-							clicked = true;
-							break;
-						}
-					}
-
-					if (!clicked) {
-						if (level.previewObject) {
-							let reason = level.checkPreviewValid();
-							if (reason.length == 0) {
-								level.removePreviewObject(true);
-							} else {
-								level.addObject(new TextRisingParticle(reason, newScreen.camera.x + x / (level.tileSize - 1) + 0.4, newScreen.camera.y + y / (level.tileSize - 1), -0.004, 150));
+					if (level.state == 'factory') {
+						let clicked = false;
+						for (var i=0; i<newScreen.ui.length; i++) {
+							let element = newScreen.ui[i];
+							if ((element instanceof UIButton || element instanceof LeftContainer || element instanceof RightContainer) && element.isInside(x, y)) {
+								element.onClick(level, game.lastMouseX, game.lastMouseY);
+								clicked = true;
+								break;
 							}
-						} else {
-							let found = false;
-							if (level.map[tileSpaceX << 0] && level.map[tileSpaceX << 0][tileSpaceY << 0]) {
-								let tile = level.map[tileSpaceX << 0][tileSpaceY << 0];
-								for (var i=0; i<tile.length; i++) {
-									if (tile[i] instanceof ChildObject) {
-										if (tile[i].parent.outputs || tile[i].parent.inputs) {
-											level.previewObject = tile[i].parent;
-											tile[i].parent.removeConnections(level);
-											level.addPreviewObject(tile[i].parent);
+						}
+
+						if (!clicked) {
+							if (level.previewObject) {
+								let reason = level.checkPreviewValid();
+								if (reason.length == 0) {
+									level.removePreviewObject(true);
+								} else {
+									level.addObject(new TextRisingParticle(reason, newScreen.camera.x + x / (level.tileSize - 1) + 0.4, newScreen.camera.y + y / (level.tileSize - 1), -0.004, 150));
+								}
+							} else {
+								let found = false;
+								if (level.map[tileSpaceX << 0] && level.map[tileSpaceX << 0][tileSpaceY << 0]) {
+									let tile = level.map[tileSpaceX << 0][tileSpaceY << 0];
+									for (var i=0; i<tile.length; i++) {
+										if (tile[i] instanceof ChildObject) {
+											if (tile[i].parent.outputs || tile[i].parent.inputs) {
+												level.previewObject = tile[i].parent;
+												tile[i].parent.removeConnections(level);
+												level.addPreviewObject(tile[i].parent);
+												level.dragging = true;
+												break;
+											}
+										} else if (tile[i].outputs || tile[i].inputs || tile[i] instanceof Pipeline || tile[i] instanceof UndergroundPipeline) {
+											level.previewObject = tile[i];
+											tile[i].removeConnections(level);
+											level.addPreviewObject(tile[i]);
 											level.dragging = true;
 											break;
 										}
-									} else if (tile[i].outputs || tile[i].inputs || tile[i] instanceof Pipeline || tile[i] instanceof UndergroundPipeline) {
-										level.previewObject = tile[i];
-										tile[i].removeConnections(level);
-										level.addPreviewObject(tile[i]);
-										level.dragging = true;
-										break;
 									}
 								}
-							}
 
-							if (!found) {
-								//level.playable[0].parent.swing(level, tileSpaceX, tileSpaceY);
+								if (!found) {
+									//level.playable[0].parent.swing(level, tileSpaceX, tileSpaceY);
+								}
 							}
 						}
 					}
@@ -790,7 +813,7 @@ function launchFactoryLevel() {
 		addMouseUpListener(function(which, x, y) {
 			switch(which) {
 				case 1:
-					if (level.dragging && level.previewObject) {
+					if (level.state == 'factory' && level.dragging && level.previewObject) {
 						level.dragging = false;
 
 						let reason = level.checkPreviewValid();
@@ -859,7 +882,7 @@ function launchFactoryLevel() {
 				let realX = newScreen.camera.x + x / (level.tileSize - 1) << 0;
 				let realY = newScreen.camera.y + y / (level.tileSize - 1) << 0;
 
-				if (!level.hoveredParticle) {
+				if (!level.hoveredParticle && level.state == 'factory') {
 					if (level.map[realX] && level.map[realX][realY]) {
 						let objs = level.map[realX][realY];
 						for (var i=0; i<objs.length; i++) {

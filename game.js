@@ -7,6 +7,8 @@ let tempPlayer;
 let id;
 let level;
 let opponent;
+let ability;
+let dragging;
 
 function render(game) {
 	if (level) {
@@ -161,7 +163,189 @@ function render(game) {
 
 				i++;
 			}
+		} else if (level.state == 'combat') {
+			if (id && players[id] && players[id].slot1 && players[id].slot1 != dragging) {
+				players[id].slot1.render(game.screens[0]);
+			}
+
+			if (id && players[id] && players[id].slot2 && players[id].slot2 != dragging) {
+				players[id].slot2.render(game.screens[0]);
+			}
+
+			if (id && players[id] && players[id].slot3 && players[id].slot3 != dragging) {
+				players[id].slot3.render(game.screens[0]);
+			}
+		} else if (level.state == 'choosingBasic') {
+			context.fillStyle = 'rgba(0, 200, 0, 1)';
+			context.strokeStyle = 'rgba(0, 100, 0, 1)';
+			context.lineWidth = 5;
+			context.fillRect(canvas.width/2 - canvas.width/20, canvas.height * 0.75, canvas.width/10, canvas.height/15);
+			context.strokeRect(canvas.width/2 - canvas.width/20, canvas.height * 0.75, canvas.width/10, canvas.height/15);
+			context.fillStyle = 'rgba(0, 100, 0, 1)';
+			context.font = canvas.height/30 + 'px Helvetica';
+			context.textAlign = 'center';
+			context.textBaseline = 'middle';
+			context.fillText('\u2713 Done', canvas.width/2, canvas.height * 0.75 + canvas.height/30);
+
+			context.fillStyle = 'rgba(70, 70, 70, 1)';
+			context.fillRect(canvas.width * 0.4 - level.tileSize/2, canvas.height * 0.6 - level.tileSize/2, level.tileSize, level.tileSize);
+			context.fillRect(canvas.width * 0.6 - level.tileSize/2, canvas.height * 0.6 - level.tileSize/2, level.tileSize, level.tileSize);
+
+			context.fillStyle = 'rgba(252, 186, 3, 1)';
+			context.font = canvas.height/20 + 'px Helvetica';
+			context.fillText('New Ability!', canvas.width/2, canvas.height * 0.05);
+
+			if (ability) {
+				context.fillStyle = 'rgba(255, 255, 255, 1)';
+				context.font = canvas.height/40 + 'px Helvetica';
+				context.fillText(ability.name, canvas.width/2, canvas.height * 0.27);
+				context.fillStyle = 'rgba(220, 220, 220, 1)';
+				context.font = canvas.height/50 + 'px Helvetica';
+				context.fillText(ability.description, canvas.width/2, canvas.height * 0.3);
+
+				context.font = canvas.height/60 + 'px Helvetica';
+				if (ability.targeting == 'passive') {
+					context.fillText('Passive', canvas.width/2, canvas.height * 0.33);
+				} else if (ability.name == 'Invisible') {
+					context.fillText('Duration: ' + ability.damage, canvas.width/2, canvas.height * 0.33);
+					context.fillText('Cooldown: ' + ability.cooldown, canvas.width/2, canvas.height * 0.35);
+				} else {
+					context.fillText('Damage: ' + ability.damage, canvas.width/2, canvas.height * 0.33);
+					context.fillText('Cooldown: ' + ability.cooldown, canvas.width/2, canvas.height * 0.35);
+				}
+			}
+
+			if (id && players[id] && players[id].slot1 && players[id].slot1 != dragging) {
+				players[id].slot1.render(game.screens[0]);
+			}
+
+			if (id && players[id] && players[id].slot2 && players[id].slot2 != dragging) {
+				players[id].slot2.render(game.screens[0]);
+			}
+
+			if (ability && ability != dragging) {
+				ability.render(game.screens[0]);
+			}
+
+			if (dragging) {
+				dragging.render(game.screens[0]);
+			}
+		} else if (level.state == 'choosingBasicUpgrade') {
+			context.fillStyle = 'rgba(252, 186, 3, 1)';
+			context.font = canvas.height/20 + 'px Helvetica';
+			context.fillText('Ability Upgrade!', canvas.width/2, canvas.height * 0.05);
+
+			if (id && players[id] && players[id].slot1 && players[id].slot1 != dragging) {
+				players[id].slot1.render(game.screens[0]);
+			}
+
+			if (id && players[id] && players[id].slot2 && players[id].slot2 != dragging) {
+				players[id].slot2.render(game.screens[0]);
+			}
+		} else if (level.state == 'choosingUltimate') {
+			context.fillStyle = 'rgba(0, 200, 0, 1)';
+			context.strokeStyle = 'rgba(0, 100, 0, 1)';
+			context.lineWidth = 5;
+			context.fillRect(canvas.width/2 - canvas.width/20, canvas.height * 0.75, canvas.width/10, canvas.height/15);
+			context.strokeRect(canvas.width/2 - canvas.width/20, canvas.height * 0.75, canvas.width/10, canvas.height/15);
+			context.fillStyle = 'rgba(0, 100, 0, 1)';
+			context.font = canvas.height/30 + 'px Helvetica';
+			context.textAlign = 'center';
+			context.textBaseline = 'middle';
+			context.fillText('\u2713 Done', canvas.width/2, canvas.height * 0.75 + canvas.height/30);
+
+			context.fillStyle = 'rgba(70, 70, 70, 1)';
+			context.fillRect(canvas.width * 0.5 - level.tileSize/2, canvas.height * 0.6 - level.tileSize/2, level.tileSize, level.tileSize);
+
+			context.fillStyle = 'rgba(252, 186, 3, 1)';
+			context.font = canvas.height/20 + 'px Helvetica';
+			context.fillText('New Ultimate Ability!', canvas.width/2, canvas.height * 0.05);
+
+			if (ability) {
+				context.fillStyle = 'rgba(255, 255, 255, 1)';
+				context.font = canvas.height/40 + 'px Helvetica';
+				context.fillText(ability.name, canvas.width/2, canvas.height * 0.27);
+				context.fillStyle = 'rgba(220, 220, 220, 1)';
+				context.font = canvas.height/50 + 'px Helvetica';
+				context.fillText(ability.description, canvas.width/2, canvas.height * 0.3);
+
+				context.font = canvas.height/60 + 'px Helvetica';
+				if (ability.targeting == 'passive') {
+					context.fillText('Passive', canvas.width/2, canvas.height * 0.33);
+				} else {
+					context.fillText('Damage: ' + ability.damage, canvas.width/2, canvas.height * 0.33);
+					context.fillText('Cooldown: ' + ability.cooldown, canvas.width/2, canvas.height * 0.35);
+				}
+			}
+
+			if (id && players[id] && players[id].slot3 && players[id].slot3 != dragging) {
+				players[id].slot3.render(game.screens[0]);
+			}
+
+			if (ability && ability != dragging) {
+				ability.render(game.screens[0]);
+			}
+
+			if (dragging) {
+				dragging.render(game.screens[0]);
+			}
 		}
+	}
+}
+
+function nextPhase() {
+	ability = null;
+
+	if (players[id].produced['basic'] >= 1) {
+		level.state = 'choosingBasic';
+
+		ability = level.basicAbilities[Math.floor(Math.random() * level.basicAbilities.length)];
+		while (ability == players[id].slot1 || ability == players[id].slot2) {
+			ability = level.basicAbilities[Math.floor(Math.random() * level.basicAbilities.length)];
+		}
+
+		ability.x = level.screen.camera.x + (level.screen.canvas.width/2 - level.tileSize/2) / (level.tileSize - 1);
+		ability.y = level.screen.camera.y - 1 + (level.screen.canvas.height/2 - level.tileSize/2) / (level.tileSize - 1);
+
+		players[id].produced['basic']--;
+	} else if (players[id].produced['basicUpgrade'] >= 1) {
+		if (players[id].slot1 && players[id].slot2) {
+			level.state = 'choosingBasicUpgrade';
+
+			let slot1X = level.screen.camera.x + (level.screen.canvas.width * 0.4 - level.tileSize/2) / (level.tileSize - 1);
+			let slot1Y = level.screen.camera.y + (level.screen.canvas.height * 0.6 - level.tileSize/2) / (level.tileSize - 1);
+			let slot2X = level.screen.camera.x + (level.screen.canvas.width * 0.6 - level.tileSize/2) / (level.tileSize - 1);
+			let slot2Y = level.screen.camera.y + (level.screen.canvas.height * 0.6 - level.tileSize/2) / (level.tileSize - 1);
+
+			players[id].slot1.x = slot1X;
+			players[id].slot1.y = slot1Y;
+			players[id].slot2.x = slot2X;
+			players[id].slot2.y = slot2Y;
+
+			players[id].produced['basicUpgrade']--;
+		} else {
+			if (players[id].slot1) {
+				players[id].slot1.upgrades += Math.floor(players[id].produced['basicUpgrade']);
+			} else if (players[id].slot2) {
+				players[id].slot2.upgrades += Math.floor(players[id].produced['basicUpgrade']);
+			}
+
+			players[id].produced['basicUpgrade'] -= Math.floor(players[id].produced['basicUpgrade']);
+		}
+	} else if (players[id].produced['ultimate'] >= 1) {
+		level.state = 'choosingUltimate';
+
+		ability = level.ultimateAbilities[Math.floor(Math.random() * level.ultimateAbilities.length)];
+		while (ability == players[id].slot3) {
+			ability = level.ultimateAbilities[Math.floor(Math.random() * level.ultimateAbilities.length)];
+		}
+
+		ability.x = level.screen.camera.x + (level.screen.canvas.width/2 - level.tileSize/2) / (level.tileSize - 1);
+		ability.y = level.screen.camera.y - 1 + (level.screen.canvas.height/2 - level.tileSize/2) / (level.tileSize - 1);
+
+		players[id].produced['ultimate']--;
+	} else {
+		level.state = 'factory';
 	}
 }
 
@@ -191,17 +375,7 @@ function tick(game) {
 		if (screen.camera.y > 21 - level.scrollSpeed) {
 			screen.camera.y = 21;
 
-			if (players[id].produced['basic'] > 1) {
-				level.state = 'choosingBasic';
-			} else if (players[id].produced['basicUpgrade'] > 1) {
-				level.state = 'choosingBasicUpgrade';
-			} else if (players[id].produced['ultimate'] > 1) {
-				level.state = 'choosingUltimate';
-			} else if (players[id].produced['ultimateUpgrade'] > 1) {
-				level.state = 'choosingUltimateUpgrade';
-			} else {
-				level.state = 'factory';
-			}
+			nextPhase();
 		}
 	}
 
@@ -237,7 +411,7 @@ function tick(game) {
 			let coastDirectionX = 0;
 			let coastDirectionY = 0;
 			let currTile = level.getXYTile(obj.base.x + obj.base.sprite.centerX * obj.base.sprite.width << 0, obj.base.y + obj.base.sprite.centerY * obj.base.sprite.height << 0);
-			if (currTile.sprite.name == 'water-dirt_4_3.png') {
+			if (currTile && currTile.sprite.name == 'water-dirt_4_3.png') {
 				if (movementDirection[0] > 0 && ((currTile.sprite.x == 2 && currTile.sprite.y == 0) || (currTile.sprite.x == 3 && currTile.sprite.y == 0) ||
 					(currTile.sprite.x == 1 && currTile.sprite.y == 1) || (currTile.sprite.x == 2 && currTile.sprite.y == 1) || (currTile.sprite.x == 2 && currTile.sprite.y == 2))) {
 
@@ -257,14 +431,16 @@ function tick(game) {
 				}
 			}
 
-			if (level.getXYTile(obj.base.x + obj.base.sprite.centerX * obj.base.sprite.width + obj.base.parent.speed * movementDirection[0] + 0.5 * coastDirectionX << 0,
-				obj.base.y + obj.base.sprite.centerY * obj.base.sprite.height + 0.5 * coastDirectionY << 0).sprite.name != 'water_1_1.png') {
+			currTile = level.getXYTile(obj.base.x + obj.base.sprite.centerX * obj.base.sprite.width + obj.base.parent.speed * movementDirection[0] + 0.5 * coastDirectionX << 0,
+				obj.base.y + obj.base.sprite.centerY * obj.base.sprite.height + 0.5 * coastDirectionY << 0);
+			if (currTile && currTile.sprite.name != 'water_1_1.png') {
 
 				obj.base.translate(level, obj.speed * movementDirection[0], 0, true);
 			}
 
-			if (level.getXYTile(obj.base.x + obj.base.sprite.centerX * obj.base.sprite.width + 0.5 * coastDirectionX << 0,
-				obj.base.y + obj.base.sprite.centerY * obj.base.sprite.height + obj.base.parent.speed * movementDirection[1] + 0.5 * coastDirectionY << 0).sprite.name != 'water_1_1.png') {
+			currTile = level.getXYTile(obj.base.x + obj.base.sprite.centerX * obj.base.sprite.width + 0.5 * coastDirectionX << 0,
+				obj.base.y + obj.base.sprite.centerY * obj.base.sprite.height + obj.base.parent.speed * movementDirection[1] + 0.5 * coastDirectionY << 0)
+			if (currTile && currTile.sprite.name != 'water_1_1.png') {
 
 				obj.base.translate(level, 0, obj.speed * movementDirection[1], true);
 			}
@@ -303,6 +479,21 @@ addKeyDownListener(function(key) {
 				break;
 			case 'KeyD':
 				emitInputChange('d', 'd');
+				break;
+			case 'KeyQ':
+				if (players[id].slot1 && players[id].slot1.cooldownTimer == 0) {
+					players[id].slot1.activate(level);
+				}
+				break;
+			case 'KeyE':
+				if (players[id].slot2 && players[id].slot2.cooldownTimer == 0) {
+					players[id].slot2.activate(level);
+				}
+				break;
+			case 'KeyR':
+				if (players[id].slot3 && players[id].slot3.cooldownTimer == 0) {
+					players[id].slot3.activate(level);
+				}
 				break;
 		}
 	}
@@ -374,9 +565,158 @@ addMouseDownListener(function(which, x, y) {
 						socket.emit('swing', tileSpaceX.toFixed(2) + '|' + tileSpaceY.toFixed(2));
 						players[id].swing(level, tileSpaceX, tileSpaceY);
 					}
+				} else if (level.state == 'choosingBasic' && !dragging) {
+					let tileSpaceX = level.screen.camera.x + x / (level.tileSize - 1);
+					let tileSpaceY = level.screen.camera.y + y / (level.tileSize - 1);
+
+					if (ability && tileSpaceX > ability.x && tileSpaceX < ability.x + ability.sprite.width && tileSpaceY > ability.y && tileSpaceY < ability.y + ability.sprite.height) {
+						dragging = ability;
+					} else if (id && players[id] && players[id].slot1 && tileSpaceX > players[id].slot1.x && tileSpaceX < players[id].slot1.x + players[id].slot1.sprite.width && tileSpaceY > players[id].slot1.y && tileSpaceY < players[id].slot1.y + players[id].slot1.sprite.height) {
+						dragging = players[id].slot1;
+					} else if (id && players[id] && players[id].slot2 && tileSpaceX > players[id].slot2.x && tileSpaceX < players[id].slot2.x + players[id].slot2.sprite.width && tileSpaceY > players[id].slot2.y && tileSpaceY < players[id].slot2.y + players[id].slot2.sprite.height) {
+						dragging = players[id].slot2;
+					} else if (x > canvas.width/2 - canvas.width/20 && x < canvas.width/2 + canvas.width/20 && y > canvas.height * 0.75 && y < canvas.height * 0.75 + canvas.height/15) {
+						nextPhase();
+					}
+				} else if (level.state == 'choosingBasicUpgrade') {
+					let tileSpaceX = level.screen.camera.x + x / (level.tileSize - 1);
+					let tileSpaceY = level.screen.camera.y + y / (level.tileSize - 1);
+
+					if (id && players[id] && players[id].slot1 && tileSpaceX > players[id].slot1.x && tileSpaceX < players[id].slot1.x + players[id].slot1.sprite.width && tileSpaceY > players[id].slot1.y && tileSpaceY < players[id].slot1.y + players[id].slot1.sprite.height) {
+						players[id].slot1.upgrades++;
+						nextPhase();
+					} else if (id && players[id] && players[id].slot2 && tileSpaceX > players[id].slot2.x && tileSpaceX < players[id].slot2.x + players[id].slot2.sprite.width && tileSpaceY > players[id].slot2.y && tileSpaceY < players[id].slot2.y + players[id].slot2.sprite.height) {
+						players[id].slot2.upgrades++;
+						nextPhase();
+					}
+				} else if (level.state == 'choosingUltimate' && ! dragging) {
+					let tileSpaceX = level.screen.camera.x + x / (level.tileSize - 1);
+					let tileSpaceY = level.screen.camera.y + y / (level.tileSize - 1);
+
+					if (ability && tileSpaceX > ability.x && tileSpaceX < ability.x + ability.sprite.width && tileSpaceY > ability.y && tileSpaceY < ability.y + ability.sprite.height) {
+						dragging = ability;
+					} else if (id && players[id] && players[id].slot3 && tileSpaceX > players[id].slot3.x && tileSpaceX < players[id].slot3.x + players[id].slot3.sprite.width && tileSpaceY > players[id].slot3.y && tileSpaceY < players[id].slot3.y + players[id].slot3.sprite.height) {
+						dragging = players[id].slot3;
+					} else if (x > canvas.width/2 - canvas.width/20 && x < canvas.width/2 + canvas.width/20 && y > canvas.height * 0.75 && y < canvas.height * 0.75 + canvas.height/15) {
+						nextPhase();
+					}
 				}
 				break;
 		}
+	}
+});
+
+addMouseUpListener(function(which, x, y) {
+	switch(which) {
+		case 1:
+			if (level && dragging && level.state == 'choosingBasic') {
+				let slot1X = level.screen.camera.x + (level.screen.canvas.width * 0.4 - level.tileSize/2) / (level.tileSize - 1);
+				let slot1Y = level.screen.camera.y + (level.screen.canvas.height * 0.6 - level.tileSize/2) / (level.tileSize - 1);
+				let slot2X = level.screen.camera.x + (level.screen.canvas.width * 0.6 - level.tileSize/2) / (level.tileSize - 1);
+				let slot2Y = level.screen.camera.y + (level.screen.canvas.height * 0.6 - level.tileSize/2) / (level.tileSize - 1);
+
+				if (id && players[id] && slot1X == dragging.x && slot1Y == dragging.y && players[id].slot1 != dragging) {
+					if (dragging == ability) {
+						ability = players[id].slot1;
+						if (ability) {
+							ability.x = level.screen.camera.x + (level.screen.canvas.width/2 - level.tileSize/2) / (level.tileSize - 1);
+							ability.y = level.screen.camera.y - 1 + (level.screen.canvas.height/2 - level.tileSize/2) / (level.tileSize - 1);
+						}
+					} else {
+						players[id].slot2 = players[id].slot1;
+						if (players[id].slot2) {
+							players[id].slot2.x = slot2X;
+							players[id].slot2.y = slot2Y;
+						}
+					}
+					players[id].slot1 = dragging;
+				} else if (id && players[id] && slot2X == dragging.x && slot2Y == dragging.y && players[id].slot2 != dragging) {
+					if (dragging == ability) {
+						ability = players[id].slot2;
+						if (ability) {
+							ability.x = level.screen.camera.x + (level.screen.canvas.width/2 - level.tileSize/2) / (level.tileSize - 1);
+							ability.y = level.screen.camera.y - 1 + (level.screen.canvas.height/2 - level.tileSize/2) / (level.tileSize - 1);
+						}
+					} else {
+						players[id].slot1 = players[id].slot2;
+						if (players[id].slot1) {
+							players[id].slot1.x = slot1X;
+							players[id].slot1.y = slot1Y;
+						}
+					}
+					players[id].slot2 = dragging;
+				} else if (id && players[id] && players[id].slot1 == dragging) {
+					players[id].slot1.x = slot1X;
+					players[id].slot1.y = slot1Y;
+				} else if (id && players[id] && players[id].slot2 == dragging) {
+					players[id].slot2.x = slot2X;
+					players[id].slot2.y = slot2Y;
+				}
+
+				dragging = null;
+			} else if (level && dragging && level.state == 'choosingUltimate') {
+				let slot3X = level.screen.camera.x + (level.screen.canvas.width * 0.5 - level.tileSize/2) / (level.tileSize - 1);
+				let slot3Y = level.screen.camera.y + (level.screen.canvas.height * 0.6 - level.tileSize/2) / (level.tileSize - 1);
+
+				if (id && players[id] && slot3X == dragging.x && slot3Y == dragging.y && players[id].slot3 != dragging) {
+					if (dragging == ability) {
+						ability = players[id].slot3;
+						if (ability) {
+							ability.x = level.screen.camera.x + (level.screen.canvas.width/2 - level.tileSize/2) / (level.tileSize - 1);
+							ability.y = level.screen.camera.y - 1 + (level.screen.canvas.height/2 - level.tileSize/2) / (level.tileSize - 1);
+						}
+					}
+
+					players[id].slot3 = dragging;
+				} else if (id && players[id] && players[id].slot3 == dragging) {
+					players[id].slot3.x = slot3X;
+					players[id].slot3.y = slot3Y;
+				}
+
+				dragging = null;
+			}
+			break;
+	}
+});
+
+addMouseMoveListener(function(x, y) {
+	if (level && dragging && level.state == 'choosingBasic') {
+		let tileSpaceX = level.screen.camera.x + x / (level.tileSize - 1);
+		let tileSpaceY = level.screen.camera.y + y / (level.tileSize - 1);
+
+		let newX = tileSpaceX - dragging.sprite.centerX * dragging.sprite.width;
+		let newY = tileSpaceY - dragging.sprite.centerY * dragging.sprite.height;
+		let slot1X = level.screen.camera.x + (level.screen.canvas.width * 0.4 - level.tileSize/2) / (level.tileSize - 1);
+		let slot1Y = level.screen.camera.y + (level.screen.canvas.height * 0.6 - level.tileSize/2) / (level.tileSize - 1);
+		let slot2X = level.screen.camera.x + (level.screen.canvas.width * 0.6 - level.tileSize/2) / (level.tileSize - 1);
+		let slot2Y = level.screen.camera.y + (level.screen.canvas.height * 0.6 - level.tileSize/2) / (level.tileSize - 1);
+
+		if (getDistance(newX, newY, slot1X, slot1Y) < 1) {
+			newX = slot1X;
+			newY = slot1Y;
+		} else if (getDistance(newX, newY, slot2X, slot2Y) < 1) {
+			newX = slot2X;
+			newY = slot2Y;
+		}
+
+		dragging.x = newX;
+		dragging.y = newY;
+	} else if (level && dragging && level.state == 'choosingUltimate') {
+		let tileSpaceX = level.screen.camera.x + x / (level.tileSize - 1);
+		let tileSpaceY = level.screen.camera.y + y / (level.tileSize - 1);
+
+		let newX = tileSpaceX - dragging.sprite.centerX * dragging.sprite.width;
+		let newY = tileSpaceY - dragging.sprite.centerY * dragging.sprite.height;
+		let slot3X = level.screen.camera.x + (level.screen.canvas.width * 0.5 - level.tileSize/2) / (level.tileSize - 1);
+		let slot3Y = level.screen.camera.y + (level.screen.canvas.height * 0.6 - level.tileSize/2) / (level.tileSize - 1);
+
+		if (getDistance(newX, newY, slot3X, slot3Y) < 1) {
+			newX = slot3X;
+			newY = slot3Y;
+		}
+
+		dragging.x = newX;
+		dragging.y = newY;
 	}
 });
 
@@ -513,11 +853,36 @@ socket.on('sr', function(opponentID) {
 	players[id].attackDamage = players[id].produced['attack'];
 	players[id].produced['money'] += 100;
 
+	if (players[id].produced['ultimateUpgrade'] >= 1) {
+		if (players[id].slot3) {
+			players[id].slot3.upgrades += Math.floor(players[id].produced['ultimateUpgrade']);
+		}
+
+		players[id].produced['ultimateUpgrade'] -= Math.floor(players[id].produced['ultimateUpgrade']);
+	}
+
 	if (opponentID == 'bye') {
 		level.result = 'Bye Round';
 		level.resultOpacity = 1;
+
+		nextPhase();
 	} else {
 		if (level && id && players[id] && players[opponentID.split('|')[1]]) {
+			if (players[id].slot1) {
+				players[id].slot1.x = level.screen.camera.x + (level.screen.canvas.width * 0.4 - level.tileSize/2) / (level.tileSize - 1);
+				players[id].slot1.y = (level.screen.canvas.height * 0.9 - level.tileSize/2) / (level.tileSize - 1);
+			}
+
+			if (players[id].slot2) {
+				players[id].slot2.x = level.screen.camera.x + (level.screen.canvas.width * 0.5 - level.tileSize/2) / (level.tileSize - 1);
+				players[id].slot2.y = (level.screen.canvas.height * 0.9 - level.tileSize/2) / (level.tileSize - 1);
+			}
+
+			if (players[id].slot3) {
+				players[id].slot3.x = level.screen.camera.x + (level.screen.canvas.width * 0.6 - level.tileSize/2) / (level.tileSize - 1);
+				players[id].slot3.y = (level.screen.canvas.height * 0.9 - level.tileSize/2) / (level.tileSize - 1);
+			}
+
 			players[id].base.setXY(level, 5 + 5*parseInt(opponentID.split('|')[0]), 5, true);
 			players[opponentID.split('|')[1]].base.setXY(level, 5 + 5*(1-parseInt(opponentID.split('|')[0])), 5, true);
 

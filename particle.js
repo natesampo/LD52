@@ -62,7 +62,7 @@ class NotFulfilledParticle extends Particle {
 	}
 
 	render(screen) {
-		if (screen.level.flash && screen.level.previewObject != this.object && (!(this.object instanceof ChildObject) || screen.level.previewObject != this.object.parent) && contains(this.object.inputsFulfilled, false)) {
+		if (screen.level.state == 'factory' && screen.level.flash && screen.level.previewObject != this.object && (!(this.object instanceof ChildObject) || screen.level.previewObject != this.object.parent) && contains(this.object.inputsFulfilled, false)) {
 			let context = screen.context;
 			let tileSize = screen.level.tileSize;
 

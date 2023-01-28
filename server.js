@@ -13,7 +13,7 @@ let io = socketIO(server);
 app.use('/', express.static(__dirname + '/'));
 
 app.get('/', function(request, response) {
-	response.sendFile(path.join(__dirname, 'terranova.html'));
+	response.sendFile(path.join(__dirname, 'factoryfighter.html'));
 });
 
 server.listen(process.env.PORT || port, function() {
